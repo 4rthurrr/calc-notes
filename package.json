@@ -1,0 +1,8 @@
+{
+  "devDependencies": {
+    "hint": "^2.0.0"
+  },
+  "dependencies": {
+    "got": "^14.4.4"
+  }
+}
