@@ -1,10 +1,9 @@
-import { ColorSwatch, Group } from '@mantine/core';
+import { ColorSwatch, Group, Slider } from '@mantine/core';
 import { Button } from '@/components/ui/button';
 import { useEffect, useRef, useState } from 'react';
 import axios from 'axios';
 import Draggable from 'react-draggable';
 import {SWATCHES} from '@/constants';
-// import {LazyBrush} from 'lazy-brush';
 
 interface GeneratedResult {
     expression: string;
@@ -21,17 +20,12 @@ export default function Home() {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const [color, setColor] = useState('rgb(255, 255, 255)');
+    const [lineWidth, setLineWidth] = useState(3); // New state for line thickness
     const [reset, setReset] = useState(false);
     const [dictOfVars, setDictOfVars] = useState({});
     const [result, setResult] = useState<GeneratedResult>();
     const [latexPosition, setLatexPosition] = useState({ x: 10, y: 200 });
     const [latexExpression, setLatexExpression] = useState<Array<string>>([]);
-
-    // const lazyBrush = new LazyBrush({
-    //     radius: 10,
-    //     enabled: true,
-    //     initialPoint: { x: 0, y: 0 },
-    // });
 
     useEffect(() => {
         if (latexExpression.length > 0 && window.MathJax) {
@@ -66,32 +60,30 @@ export default function Home() {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight - canvas.offsetTop;
                 ctx.lineCap = 'round';
-                ctx.lineWidth = 3;
+                ctx.lineWidth = lineWidth; // Use the lineWidth state
             }
 
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML';
+            script.async = true;
+            document.head.appendChild(script);
+
+            script.onload = () => {
+                window.MathJax.Hub.Config({
+                    tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
+                });
+            };
+
+            return () => {
+                document.head.removeChild(script);
+            };
         }
-        const script = document.createElement('script');
-        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-MML-AM_CHTML';
-        script.async = true;
-        document.head.appendChild(script);
-
-        script.onload = () => {
-            window.MathJax.Hub.Config({
-                tex2jax: {inlineMath: [['$', '$'], ['\\(', '\\)']]},
-            });
-        };
-
-        return () => {
-            document.head.removeChild(script);
-        };
-
-    }, []);
+    }, [lineWidth]); // Add lineWidth to dependency array
 
     const renderLatexToCanvas = (expression: string, answer: string) => {
         const latex = `\\(\\LARGE{${expression} = ${answer}}\\)`;
         setLatexExpression([...latexExpression, latex]);
 
-        // Clear the main canvas
         const canvas = canvasRef.current;
         if (canvas) {
             const ctx = canvas.getContext('2d');
@@ -100,7 +92,6 @@ export default function Home() {
             }
         }
     };
-
 
     const resetCanvas = () => {
         const canvas = canvasRef.current;
@@ -124,6 +115,7 @@ export default function Home() {
             }
         }
     };
+
     const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
         if (!isDrawing) {
             return;
@@ -133,11 +125,13 @@ export default function Home() {
             const ctx = canvas.getContext('2d');
             if (ctx) {
                 ctx.strokeStyle = color;
+                ctx.lineWidth = lineWidth; // Set line width dynamically
                 ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
                 ctx.stroke();
             }
         }
     };
+
     const stopDrawing = () => {
         setIsDrawing(false);
     };  
@@ -159,7 +153,6 @@ export default function Home() {
             console.log('Response', resp);
             resp.data.forEach((data: Response) => {
                 if (data.assign === true) {
-                    // dict_of_vars[resp.result] = resp.answer;
                     setDictOfVars({
                         ...dictOfVars,
                         [data.expr]: data.result
@@ -199,29 +192,48 @@ export default function Home() {
 
     return (
         <>
-            <div className='grid grid-cols-3 gap-2'>
+            <div className='grid grid-cols-3 gap-1'>
+                
                 <Button
                     onClick={() => setReset(true)}
-                    className='z-20 bg-black text-white'
+                    className='z-20 bg-black text-white text-2xl font-bold '
                     variant='default' 
                     color='black'
                 >
                     Reset
                 </Button>
-                <Group className='z-20'>
+                
+                <Group className='z-20 flex justify-center items-center  '>
+                    <br/><br/><br/>
+                    <br/>
                     {SWATCHES.map((swatch) => (
                         <ColorSwatch key={swatch} color={swatch} onClick={() => setColor(swatch)} />
                     ))}
+                    <br/>
+
+<Slider 
+                    label={(value) => `Thickness: ${value}`}
+                    min={1}
+                    max={20}
+                    step={1}
+                    value={lineWidth}
+                    onChange={setLineWidth}
+                    color='white'
+                    className='ml-4 w-64'
+                />
                 </Group>
                 <Button
                     onClick={runRoute}
-                    className='z-20 bg-black text-white'
+                    className='z-20 bg-black text-white text-2xl font-bold'
                     variant='default'
                     color='white'
                 >
                     Run
                 </Button>
             </div>
+            
+            
+
             <canvas
                 ref={canvasRef}
                 id='canvas'
@@ -230,6 +242,7 @@ export default function Home() {
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
                 onMouseOut={stopDrawing}
+                color='black'
             />
 
             {latexExpression && latexExpression.map((latex, index) => (
