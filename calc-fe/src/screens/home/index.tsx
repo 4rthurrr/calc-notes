@@ -256,6 +256,40 @@ export default function Home() {
                     </div>
                 </Draggable>
             ))}
+            <footer className="fixed bottom-0 left-0 w-full bg-black/70 backdrop-blur-sm text-white p-2 flex justify-between items-center z-30">
+      <div className="flex items-center space-x-4">
+        <a 
+          href="#" 
+          className="hover:text-gray-300 transition-colors flex items-center"
+          title="About"
+        >
+          <Info size={20} className="mr-2" />
+          <span className="text-sm">About</span>
+        </a>
+        <a 
+          href="#" 
+          className="hover:text-gray-300 transition-colors flex items-center"
+          title="Color Palette"
+        >
+          <Palette size={20} className="mr-2" />
+          <span className="text-sm">Palette</span>
+        </a>
+      </div>
+      
+      <div className="flex items-center space-x-4">
+        <a 
+          href="https://github.com/your-repo" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="hover:text-gray-300 transition-colors flex items-center"
+          title="GitHub Repository"
+        >
+          <GitHub size={20} className="mr-2" />
+          <span className="text-sm">GitHub</span>
+        </a>
+      </div>
+    </footer>
         </>
+        
     );
 }
